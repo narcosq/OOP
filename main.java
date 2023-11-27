@@ -1,28 +1,40 @@
-class InsufficientBalanceException(Exception):
-    def __init__(self, balance, withdrawal_amount):
-        self.balance = balance
-        self.withdrawal_amount = withdrawal_amount
-        super().__init__(f"Insufficient balance. Current balance: {balance}, Withdrawal amount: {withdrawal_amount}")
+class InsufficientBalanceException extends Exception {
+    public InsufficientBalanceException(double balance, double withdrawalAmount) {
+        super("Insufficient balance. Current balance: " + balance + ", Withdrawal amount: " + withdrawalAmount);
+    }
+}
 
-class Account:
-    def __init__(self, initial_balance=0):
-        self.balance = initial_balance
+class Account {
+    private double balance;
 
-    def withdraw(self, amount):
-        if amount > self.balance:
-            raise InsufficientBalanceException(self.balance, amount)
-        else:
-            self.balance -= amount
-            print(f"Withdrawal of {amount} successful. Remaining balance: {self.balance}")
+    public Account(double initialBalance) {
+        this.balance = initialBalance;
+    }
 
-try:
-    my_account = Account(initial_balance=1000)
+    public void withdraw(double amount) throws InsufficientBalanceException {
+        if (amount > balance) {
+            throw new InsufficientBalanceException(balance, amount);
+        } else {
+            balance -= amount;
+            System.out.println("Withdrawal of " + amount + " successful. Remaining balance: " + balance);
+        }
+    }
+}
 
-    withdrawal_amount = 1500
-    my_account.withdraw(withdrawal_amount)
+public class AccountManagementDemo {
+    public static void main(String[] args) {
+        try {
+            // Create an Account object with initial balance
+            Account myAccount = new Account(1000);
 
-except InsufficientBalanceException as e:
-    print(f"Error: {e}")
+            // Try to withdraw an amount larger than the balance
+            double withdrawalAmount = 1500;
+            myAccount.withdraw(withdrawalAmount);
 
-except Exception as e:
-    print(f"An unexpected error occurred: {e}")
+        } catch (InsufficientBalanceException e) {
+            System.out.println("Error: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("An unexpected error occurred: " + e.getMessage());
+        }
+    }
+}

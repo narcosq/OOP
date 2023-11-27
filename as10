@@ -1,0 +1,128 @@
+import java.util.regex.*;
+
+public class StringProcessor {
+
+    public boolean isStrongPassword(String password) {
+        // Check if the password contains at least one uppercase letter, one lowercase letter, one digit, and one special symbol
+        return password.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@#$%^&+=]).+$");
+    }
+
+    public int calculateDigits(String sentence) {
+        int digitCount = 0;
+        for (char c : sentence.toCharArray()) {
+            if (Character.isDigit(c)) {
+                digitCount++;
+            }
+        }
+        return digitCount;
+    }
+
+    public int calculateWords(String sentence) {
+        // Use regular expression to split the sentence into words
+        String[] words = sentence.split("\\s+");
+        return words.length;
+    }
+
+    public double calculateExpression(String expression) {
+        // Assuming a valid and well-formed expression
+        return eval(expression);
+    }
+
+    private double eval(String expression) {
+        return new Object() {
+            int pos = -1, ch;
+
+            void nextChar() {
+                ch = (++pos < expression.length()) ? expression.charAt(pos) : -1;
+            }
+
+            boolean eat(int charToEat) {
+                while (ch == ' ') {
+                    nextChar();
+                }
+                if (ch == charToEat) {
+                    nextChar();
+                    return true;
+                }
+                return false;
+            }
+
+            double parse() {
+                nextChar();
+                double x = parseExpression();
+                if (pos < expression.length()) {
+                    throw new RuntimeException("Unexpected: " + (char) ch);
+                }
+                return x;
+            }
+
+            double parseExpression() {
+                double x = parseTerm();
+                for (;;) {
+                    if (eat('+')) {
+                        x += parseTerm(); // addition
+                    } else if (eat('-')) {
+                        x -= parseTerm(); // subtraction
+                    } else {
+                        return x;
+                    }
+                }
+            }
+
+            double parseTerm() {
+                double x = parseFactor();
+                for (;;) {
+                    if (eat('*')) {
+                        x *= parseFactor(); // multiplication
+                    } else if (eat('/')) {
+                        x /= parseFactor(); // division
+                    } else {
+                        return x;
+                    }
+                }
+            }
+
+            double parseFactor() {
+                if (eat('+')) {
+                    return parseFactor(); // unary plus
+                }
+                if (eat('-')) {
+                    return -parseFactor(); // unary minus
+                }
+
+                double x;
+                int startPos = this.pos;
+                if (eat('(')) { // parentheses
+                    x = parseExpression();
+                    eat(')');
+                } else if ((ch >= '0' && ch <= '9') || ch == '.') { // numbers
+                    while ((ch >= '0' && ch <= '9') || ch == '.') {
+                        nextChar();
+                    }
+                    x = Double.parseDouble(expression.substring(startPos, this.pos));
+                } else {
+                    throw new RuntimeException("Unexpected: " + (char) ch);
+                }
+
+                return x;
+            }
+        }.parse();
+    }
+
+    public static void main(String[] args) {
+        StringProcessor stringProcessor = new StringProcessor();
+
+        // Test isStrongPassword
+        System.out.println("Is 'StrongPassword123@' a strong password? " + stringProcessor.isStrongPassword("StrongPassword123@"));
+        System.out.println("Is 'weakpassword' a strong password? " + stringProcessor.isStrongPassword("weakpassword"));
+
+        // Test calculateDigits
+        System.out.println("Number of digits in 'Hello123': " + stringProcessor.calculateDigits("Hello123"));
+
+        // Test calculateWords
+        System.out.println("Number of words in 'This is a sentence.': " + stringProcessor.calculateWords("This is a sentence."));
+
+        // Test calculateExpression
+        System.out.println("Result of expression '2.5 + 3.5 * (4 / 2)': " + stringProcessor.calculateExpression("2.5 + 3.5 * (4 / 2)"));
+    }
+}

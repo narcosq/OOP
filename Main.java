@@ -1,38 +1,67 @@
-class InsufficientBalanceException extends Exception {
-    public InsufficientBalanceException(String message) {
-        super(message);
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+
+class WordProcessor {
+    private Set<String> distinctWords;
+
+    public WordProcessor() {
+        distinctWords = new HashSet<>();
+    }
+
+    public void readFile(String filePath) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] words = line.split("\\s+");
+                for (String word : words) {
+                    distinctWords.add(word.toLowerCase()); // Store words in lowercase for case-insensitive comparison
+                }
+            }
+        }
+    }
+
+    public Set<String> getDistinctWords() {
+        return distinctWords;
     }
 }
 
-class Account {
-    private double balance;
+class SimilarityCalculator {
+    public double calculateSimilarity(Set<String> set1, Set<String> set2) {
+        Set<String> intersection = new HashSet<>(set1);
+        intersection.retainAll(set2);
 
-    public Account(double initialBalance) {
-        this.balance = initialBalance;
-    }
+        Set<String> union = new HashSet<>(set1);
+        union.addAll(set2);
 
-    public double withdraw(double amount) throws InsufficientBalanceException {
-        if (amount > balance) {
-            throw new InsufficientBalanceException("Insufficient balance. Cannot withdraw " + amount);
-        } else {
-            balance -= amount;
-            return balance;
+        if (union.isEmpty()) {
+            return 0.0; // Avoid division by zero
         }
+
+        return (double) intersection.size() / union.size();
     }
 }
 
 public class Main {
     public static void main(String[] args) {
         try {
-            Account myAccount = new Account(1000);
+            WordProcessor wordProcessor1 = new WordProcessor();
+            wordProcessor1.readFile("file1.txt");
+            Set<String> distinctWords1 = wordProcessor1.getDistinctWords();
 
-            double withdrawalAmount = 1500;
-            double remainingBalance = myAccount.withdraw(withdrawalAmount);
+            WordProcessor wordProcessor2 = new WordProcessor();
+            wordProcessor2.readFile("file2.txt");
+            Set<String> distinctWords2 = wordProcessor2.getDistinctWords();
 
-            System.out.println("Withdrawal successful. Remaining balance: " + remainingBalance);
+            SimilarityCalculator similarityCalculator = new SimilarityCalculator();
+            double similarity = similarityCalculator.calculateSimilarity(distinctWords1, distinctWords2);
 
-        } catch (InsufficientBalanceException e) {
-            System.out.println("Error: " + e.getMessage());
+            System.out.println("Jaccard Similarity Coefficient: " + similarity);
+
+        } catch (IOException e) {
+            System.err.println("Error reading files: " + e.getMessage());
         }
     }
 }
